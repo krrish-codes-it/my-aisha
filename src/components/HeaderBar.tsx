@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Crown, Compass, Edit3, Camera, Upload } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Crown, Compass, Edit3 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
+import aishaProfilePhoto from '../assets/images/aisha_profile_photo_1790098276114.jpg';
 
 interface HeaderBarProps {
   currentStage: number;
@@ -28,7 +29,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 }) => {
   const [isMuted, setIsMuted] = useState(soundEffects.getIsMuted());
   const [profilePic, setProfilePic] = useState<string>(() => {
-    return localStorage.getItem('aisha_profile_picture') || '/1000146035.jpg';
+    const saved = localStorage.getItem('aisha_profile_picture');
+    if (saved && saved.startsWith('data:image')) return saved;
+    return aishaProfilePhoto;
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,56 +87,33 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     <header className="fixed top-0 left-0 right-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-[#120716]/85 backdrop-blur-md border-b border-amber-400/20 shadow-lg">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
         {/* Left: Royal Profile Picture & Title */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Avatar Picture Circle (Click to change) */}
-          <div className="relative group">
+        <div className="flex items-center gap-2.5 sm:gap-3.5">
+          {/* Avatar Picture Circle - Only 1 Circular Picture */}
+          <div className="relative">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              title="Click to change Dr. Aisha Habibi's photo"
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-amber-300/80 shadow-[0_0_12px_rgba(251,191,36,0.35)] overflow-hidden bg-rose-950 flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none"
+              title="Dr. Aisha Habibi"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-amber-300/90 shadow-[0_0_15px_rgba(251,191,36,0.45)] overflow-hidden bg-[#240822] flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none"
             >
               <img
                 src={profilePic}
                 alt="Dr. Aisha Habibi"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
+                className="w-full h-full object-cover object-center"
               />
-              <div className="hidden w-full h-full bg-gradient-to-tr from-amber-500/40 to-rose-500/40 items-center justify-center font-serif text-amber-200 text-xs font-bold">
-                AH
-              </div>
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
-                <Camera className="w-4 h-4 text-amber-200 drop-shadow" />
-              </div>
             </button>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-amber-400 border border-black/50 flex items-center justify-center text-[8px] pointer-events-none">
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-gradient-to-r from-amber-400 to-rose-400 border border-black/50 flex items-center justify-center text-[8px] pointer-events-none shadow-sm">
               ✨
             </span>
           </div>
-
-          {/* Upload Button next to the picture circle */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoUpload}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-400/15 hover:bg-amber-400/25 border border-amber-300/40 text-amber-200 text-[11px] font-sans font-medium transition-colors shadow-sm cursor-pointer"
-            title="Upload photo for the circle"
-          >
-            <Camera className="w-3 h-3 text-amber-300" />
-            <span className="hidden xs:inline">Upload Photo</span>
-          </button>
 
           <div>
             <div className="flex items-center gap-1.5">
