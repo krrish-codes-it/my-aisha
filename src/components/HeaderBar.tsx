@@ -4,9 +4,10 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Crown, Compass, Edit3 } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Crown, Compass, Edit3, Music } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import aishaProfilePhoto from '../assets/images/aisha_profile_photo_1790098276114.jpg';
+import { MusicPlayerModal } from './MusicPlayerModal';
 
 interface HeaderBarProps {
   currentStage: number;
@@ -28,10 +29,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   activeThemeColor = '#f472b6',
 }) => {
   const [isMuted, setIsMuted] = useState(soundEffects.getIsMuted());
+  const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState(soundEffects.getTrackName());
+  const [isPlaying, setIsPlaying] = useState(soundEffects.isMusicPlaying());
   const [profilePic, setProfilePic] = useState<string>(() => {
     const saved = localStorage.getItem('aisha_profile_picture');
     if (saved && saved.startsWith('data:image')) return saved;
-    return aishaProfilePhoto;
+    return '/aisha_profile.png';
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +46,15 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = soundEffects.subscribeTrackChange((track, playing) => {
+      setCurrentTrack(track);
+      setIsPlaying(playing);
+      setIsMuted(soundEffects.getIsMuted());
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleAudioToggle = () => {
@@ -166,19 +179,36 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
         {/* Right: Controls & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Ambient Music Toggle */}
-          <button
-            type="button"
-            onClick={handleAudioToggle}
-            className={`p-2 rounded-full border transition-all duration-200 flex items-center justify-center ${
-              isMuted
-                ? 'bg-white/5 border-white/20 text-stone-400 hover:text-white'
-                : 'bg-amber-500/20 border-amber-400/50 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
-            }`}
-            title={isMuted ? 'Play Ambient Romantic Music' : 'Mute Music'}
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
+          {/* Background Music Widget */}
+          <div className="flex items-center rounded-full bg-white/5 border border-amber-400/25 p-0.5 sm:p-1 gap-1">
+            {/* Ambient Music Toggle */}
+            <button
+              type="button"
+              onClick={handleAudioToggle}
+              className={`p-1.5 sm:p-2 rounded-full border transition-all duration-200 flex items-center justify-center cursor-pointer ${
+                isMuted
+                  ? 'bg-white/5 border-white/20 text-stone-400 hover:text-white'
+                  : 'bg-amber-500/20 border-amber-400/50 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
+              }`}
+              title={isMuted ? 'Play Music' : 'Mute Music'}
+            >
+              {isMuted ? <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+            </button>
+
+            {/* Music Settings / Track Selector Button */}
+            <button
+              type="button"
+              onClick={() => setIsMusicModalOpen(true)}
+              className="px-2 py-1 rounded-full hover:bg-amber-400/15 text-amber-200 text-xs font-serif flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Change Background Song / Upload Music"
+            >
+              <Music className={`w-3.5 h-3.5 ${isPlaying && !isMuted ? 'text-amber-300 animate-pulse' : 'text-stone-400'}`} />
+              <span className="hidden md:inline max-w-[110px] truncate text-[11px] font-medium text-amber-100">
+                {currentTrack}
+              </span>
+              <span className="md:hidden text-[11px]">Music</span>
+            </button>
+          </div>
 
           {/* Jump to Stage / Map */}
           <button
@@ -203,6 +233,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           </button>
         </div>
       </div>
+
+      <MusicPlayerModal
+        isOpen={isMusicModalOpen}
+        onClose={() => setIsMusicModalOpen(false)}
+      />
     </header>
   );
 };

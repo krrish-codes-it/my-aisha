@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Crown, Sparkles, Heart, Gift } from 'lucide-react';
+import { Crown, Sparkles, Heart, Gift, Music } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
+import { MusicPlayerModal } from './MusicPlayerModal';
 
 interface OpeningEnvelopeProps {
   onStartJourney: () => void;
@@ -15,6 +16,13 @@ interface OpeningEnvelopeProps {
 export const OpeningEnvelope: React.FC<OpeningEnvelopeProps> = ({ onStartJourney }) => {
   const [isOpening, setIsOpening] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
+  const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
+  const [trackName, setTrackName] = useState(soundEffects.getTrackName());
+
+  useEffect(() => {
+    const unsub = soundEffects.subscribeTrackChange((t) => setTrackName(t));
+    return () => unsub();
+  }, []);
 
   const handleOpenEnvelope = () => {
     if (isOpening || isOpened) return;
@@ -133,10 +141,27 @@ export const OpeningEnvelope: React.FC<OpeningEnvelopeProps> = ({ onStartJourney
                     A Birthday Surprise Awaits You…
                   </p>
 
-                  <p className="font-sans text-xs sm:text-sm text-amber-100/70 max-w-md mx-auto leading-relaxed mb-8">
+                  <p className="font-sans text-xs sm:text-sm text-amber-100/70 max-w-md mx-auto leading-relaxed mb-6">
                     10 Envelopes, 10 Surprises & 1 Royal Confession.<br />
                     A continuous magical journey woven with flowers, shayari, butterflies, and crowns.
                   </p>
+
+                  {/* Background Music pill & quick selector */}
+                  <div className="mb-6 flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMusicModalOpen(true);
+                      }}
+                      className="px-3.5 py-1.5 rounded-full bg-amber-400/15 hover:bg-amber-400/25 border border-amber-300/40 text-amber-200 text-xs font-serif flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                      title="Set or Change Background Music"
+                    >
+                      <Music className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                      <span className="truncate max-w-[200px]">Soundtrack: {trackName}</span>
+                      <span className="text-[10px] text-pink-200 underline ml-1">Change / Upload</span>
+                    </button>
+                  </div>
 
                   {/* Wax Seal / Clickable Button */}
                   <div className="relative mt-2">
@@ -221,6 +246,11 @@ export const OpeningEnvelope: React.FC<OpeningEnvelopeProps> = ({ onStartJourney
           )}
         </AnimatePresence>
       </div>
+
+      <MusicPlayerModal
+        isOpen={isMusicModalOpen}
+        onClose={() => setIsMusicModalOpen(false)}
+      />
     </div>
   );
 };
